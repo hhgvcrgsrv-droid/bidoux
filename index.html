@@ -1,51 +1,72 @@
-<!-- Remplacez la ligne <h1>FinanceScan</h1> par celle-ci -->
-<h1 style="color: red !important; display: block !important;">TEST VISUEL - FinanceScan</h1>
-<!DOCTYPE html><html lang="fr"><script>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanceScan</title>
+    <style>
+        body { font-family: sans-serif; background: #F2F2F7; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 80%; }
+        .btn-scan { background: #007AFF; color: white; padding: 20px; border-radius: 12px; display: block; font-weight: bold; cursor: pointer; margin-top: 20px; text-decoration: none; }
+        #status { margin-top: 15px; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1 style="margin:0; color:#333;">FinanceScan</h1>
+    <p>Capture de documents</p>
+    
+    <div id="status">Prêt</div>
+
+    <label for="fileInput" class="btn-scan">
+        📷 SCANNER UN DOCUMENT
+    </label>
+    <input type="file" id="fileInput" accept="image/*" style="display:none">
+</div>
+
+<script>
+    // --- REMPLACEZ CES DEUX LIGNES ---
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyI_LaxyDo_D0WRIq4bh9Vq-YP6P1MniNwpMWFHFhgHWA1--FYASwneVBcLHAMoTP8v/exec"; 
     const MA_CLE = "Brocode33!";
+    // ---------------------------------
 
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
+        alert("Étape 1 : Photo reçue !");
         const status = document.getElementById('status');
-        const spinner = document.getElementById('spinner');
-        
         status.innerText = "Envoi en cours...";
-        spinner.style.display = "block";
 
         const reader = new FileReader();
         reader.onload = function(event) {
-            try {
-                const base64Content = event.target.result.split(',')[1];
-                const payload = JSON.stringify({
+            const base64Content = event.target.result.split(',')[1];
+            
+            alert("Étape 2 : Connexion à Google...");
+            
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({
                     cle: MA_CLE,
                     fileContent: base64Content,
                     fileName: file.name,
                     mimeType: file.type
-                });
-
-                // On utilise une méthode plus simple pour Google
-                fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    cache: 'no-cache',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: payload
                 })
-                .then(() => {
-                    // Avec no-cors, on considère que si la requête est partie, c'est réussi
-                    status.innerHTML = "<b style='color:#34C759'>✅ ENVOYÉ !</b><br>Vérifiez votre Google Sheet d'ici 10s.";
-                    spinner.style.display = "none";
-                })
-                .catch(err => {
-                    status.innerHTML = "❌ Erreur réseau : " + err;
-                    spinner.style.display = "none";
-                });
-            } catch (err) {
-                status.innerText = "Erreur lecture fichier : " + err;
-            }
+            })
+            .then(() => {
+                alert("Étape 3 : Terminé ! Vérifiez Sheets.");
+                status.innerHTML = "<b>✅ ENVOYÉ !</b>";
+            })
+            .catch(err => {
+                alert("ERREUR : " + err);
+                status.innerText = "Erreur technique.";
+            });
         };
         reader.readAsDataURL(file);
     });
-</script></body></html>
+</script>
+
+</body>
+</html>
